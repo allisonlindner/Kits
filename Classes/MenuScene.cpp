@@ -50,10 +50,30 @@ bool MenuScene::init() {
 }
 
 cocos2d::MenuItem* MenuScene::createMenuItem(const char *p_name, const char *p_musicName, const char *p_artistName) {
-    auto menuItem = MenuItem::create();
-    auto kitLabel = Label::createWithTTF("KIT\nNOME", "fonts/PTSansProLight.OTF", 40, Size::ZERO, TextHAlignment::CENTER);
+    auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    menuItem->addChild(kitLabel);
+    auto menuItem = MenuItem::create();
+    auto menuBG = Sprite::create("kit_menu_bg.png");
+    menuBG->setContentSize(Size(visibleSize.width - 80, 229));
+
+    auto menuNameBG = Sprite::create("kit_menu_name_bg.png");
+    menuNameBG->setAnchorPoint(Vec2(0, 0.5));
+    menuNameBG->setPosition(20, 114.5f);
+    menuNameBG->setContentSize(Size(189, 189));
+    menuBG->addChild(menuNameBG);
+
+    auto kitLabel = Label::createWithTTF("KIT\nNOME", "fonts/PTSansProBlk.OTF", 40, Size::ZERO, TextHAlignment::CENTER);
+    kitLabel->setAnchorPoint(Vec2(0.5, 0.5));
+    kitLabel->setPosition(94.5, 94.5);
+    menuNameBG->addChild(kitLabel);
+
+    auto kitArrow = Sprite::create("kit_menu_arrow.png");
+    kitArrow->setContentSize(Size(67, 67));
+    kitArrow->setAnchorPoint(Vec2(1, 0));
+    kitArrow->setPosition(menuBG->getContentSize().width, 0);
+    menuBG->addChild(kitArrow);
+
+    menuItem->addChild(menuBG);
 
     return menuItem;
 }
