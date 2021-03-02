@@ -34,12 +34,22 @@ bool MenuScene::init() {
 
     // Menu BG
     auto menuBGColor = LayerColor::create(Color4B(47, 56, 59, 255), visibleSize.width, menuSize.height + 60);
+    menuBGColor->setContentSize(Size(visibleSize.width, menuSize.height + 60));
     menuBGColor->setPosition(Vec2(0, visibleSize.height - menuSize.height - 60));
 
     // Menu
-
     auto menu = Menu::create();
-    menu->addChild(createMenuItem("TESTE", "TESTE", "TESTE"));
+
+    menu->setAnchorPoint(Vec2(0.5, 1));
+    menu->setPosition(visibleSize.width / 2.0f, visibleSize.height - menuBGColor->getContentSize().height - 40);
+
+    int numberOfKits = 5;
+
+    for(int i = 0; i < numberOfKits; i++) {
+        auto menuItem = createMenuItem("NOME", "NOME DA MÚSICA", "Nome dos artistas");
+        menuItem->setPosition(0, (-menuItem->getContentSize().height - 10.0f) * (float)i);
+        menu->addChild(menuItem);
+    }
 
     this->addChild(layerColor);
     this->addChild(menuBGColor);
@@ -73,7 +83,32 @@ cocos2d::MenuItem* MenuScene::createMenuItem(const char *p_name, const char *p_m
     kitArrow->setPosition(menuBG->getContentSize().width, 0);
     menuBG->addChild(kitArrow);
 
+    // Labels
+    auto inspiredByLabel = Label::createWithTTF("INSPIRADO EM", "fonts/PTSansProLight.OTF", 25, Size::ZERO, TextHAlignment::LEFT);
+    auto pinkLine = Sprite::create("pink_line.png");
+    auto musicNameLabel = Label::createWithTTF(p_musicName, "fonts/PTSansProBlk.OTF", 32, Size::ZERO, TextHAlignment::LEFT);
+    auto artistNameLabel = Label::createWithTTF(p_artistName, "fonts/PTSansProRegular.OTF", 27, Size::ZERO, TextHAlignment::LEFT);
+
+    pinkLine->setScale(0.8f);
+    pinkLine->setAnchorPoint(Vec2(0, 1));
+    inspiredByLabel->setAnchorPoint(Vec2(0, 0));
+    pinkLine->setPosition(0, 0);
+    inspiredByLabel->addChild(pinkLine);
+
+    inspiredByLabel->setPosition(0, musicNameLabel->getContentSize().height + 15);
+    musicNameLabel->addChild(inspiredByLabel);
+
+    artistNameLabel->setAnchorPoint(Vec2(0, 1));
+    artistNameLabel->setPosition(0, 5);
+    musicNameLabel->addChild(artistNameLabel);
+
+    musicNameLabel->setAnchorPoint(Vec2(0, 0.5));
+    musicNameLabel->setPosition(menuNameBG->getContentSize().width + 30, menuNameBG->getContentSize().height/2.0f);
+    menuNameBG->addChild(musicNameLabel);
+
     menuItem->addChild(menuBG);
+    menuItem->setAnchorPoint(Vec2(0, 0.5));
+    menuItem->setContentSize(Size(visibleSize.width, menuBG->getContentSize().height));
 
     return menuItem;
 }
