@@ -2,9 +2,11 @@
 // Created by lindner.allison on 25/02/2021.
 //
 
+#include <cocos/ui/UIListView.h>
 #include "MenuScene.h"
 
 USING_NS_CC;
+using namespace cocos2d::ui;
 
 cocos2d::Scene *MenuScene::createScene() {
     return MenuScene::create();
@@ -37,33 +39,39 @@ bool MenuScene::init() {
     menuBGColor->setContentSize(Size(visibleSize.width, menuSize.height + 60));
     menuBGColor->setPosition(Vec2(0, visibleSize.height - menuSize.height - 60));
 
-    // Menu
-    auto menu = Menu::create();
+    auto listView = ListView::create();
+    listView->setContentSize(Size(visibleSize.width, visibleSize.height - menuSize.height - 60));
+    listView->setAnchorPoint(Vec2(0.5, 0));
+    listView->setPosition(Vec2(visibleSize.width/2.0f, 0));
 
-    menu->setAnchorPoint(Vec2(0.5, 1));
-    menu->setPosition(visibleSize.width / 2.0f, visibleSize.height - menuBGColor->getContentSize().height - 40);
+    listView->setTopPadding(60.0f);
+    listView->setItemsMargin(20.0f);
+    listView->setBottomPadding(60.0f);
 
-    int numberOfKits = 5;
+    int numberOfKits = 100;
 
     for(int i = 0; i < numberOfKits; i++) {
-        auto menuItem = createMenuItem("NOME", "NOME DA MÚSICA", "Nome dos artistas");
-        menuItem->setPosition(0, (-menuItem->getContentSize().height - 10.0f) * (float)i);
-        menu->addChild(menuItem);
+        auto menuItemModel = createMenuItem("NOME " + std::to_string(i + 1),
+                                            "NOME DA MÚSICA" + std::to_string(i + 1),
+                                            "Nome dos artistas" + std::to_string(i + 1));
+        listView->pushBackCustomItem(menuItemModel);
     }
 
     this->addChild(layerColor);
     this->addChild(menuBGColor);
     this->addChild(menuButton);
-    this->addChild(menu);
+    this->addChild(listView);
 
     return true;
 }
 
-cocos2d::MenuItem* MenuScene::createMenuItem(const char *p_name, const char *p_musicName, const char *p_artistName) {
+cocos2d::ui::Widget* MenuScene::createMenuItem(const std::string& p_name, const std::string& p_musicName, const std::string& p_artistName) {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    auto menuItem = MenuItem::create();
+    auto menuItem = Widget::create();
     auto menuBG = Sprite::create("kit_menu_bg.png");
+    menuBG->setAnchorPoint(Vec2(0.5, 0.0));
+    menuBG->setPosition(Vec2(visibleSize.width/2.0f, 0.0));
     menuBG->setContentSize(Size(visibleSize.width - 80, 229));
 
     auto menuNameBG = Sprite::create("kit_menu_name_bg.png");
@@ -72,7 +80,7 @@ cocos2d::MenuItem* MenuScene::createMenuItem(const char *p_name, const char *p_m
     menuNameBG->setContentSize(Size(189, 189));
     menuBG->addChild(menuNameBG);
 
-    auto kitLabel = Label::createWithTTF("KIT\nNOME", "fonts/PTSansProBlk.OTF", 40, Size::ZERO, TextHAlignment::CENTER);
+    auto kitLabel = Label::createWithTTF("KIT\n" + p_name, "fonts/PTSansProBlk.OTF", 40, Size::ZERO, TextHAlignment::CENTER);
     kitLabel->setAnchorPoint(Vec2(0.5, 0.5));
     kitLabel->setPosition(94.5, 94.5);
     menuNameBG->addChild(kitLabel);
@@ -107,7 +115,6 @@ cocos2d::MenuItem* MenuScene::createMenuItem(const char *p_name, const char *p_m
     menuNameBG->addChild(musicNameLabel);
 
     menuItem->addChild(menuBG);
-    menuItem->setAnchorPoint(Vec2(0, 0.5));
     menuItem->setContentSize(Size(visibleSize.width, menuBG->getContentSize().height));
 
     return menuItem;
