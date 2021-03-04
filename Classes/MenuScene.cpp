@@ -2,11 +2,13 @@
 // Created by lindner.allison on 25/02/2021.
 //
 
-#include <cocos/ui/UIListView.h>
 #include "MenuScene.h"
+#include "MenuTableViewCell.h"
 
 USING_NS_CC;
-using namespace cocos2d::ui;
+USING_NS_CC_EXT;
+using namespace cocos2d::network;
+using namespace rapidjson;
 
 cocos2d::Scene *MenuScene::createScene() {
     return MenuScene::create();
@@ -24,98 +26,142 @@ bool MenuScene::init() {
     auto layerColor = LayerColor::create(Color4B(36, 43, 46, 255), visibleSize.width, visibleSize.height);
     layerColor->setPosition(origin);
 
-    // Open Menu Button
     auto menuButton = MenuItemImage::create("x_bg.png", "x_bg.png");
     auto menuLabel = Sprite::create("x.png");
     auto menuSize = menuButton->getContentSize();
-    menuLabel->setAnchorPoint(Vec2(0.5, 0.5));
-    menuLabel->setPosition(menuSize.width/2.0f, (menuSize.height/2.0f) + 5);
-    menuLabel->setContentSize(Size(38, 38));
-    menuButton->setPosition((menuSize.width / 2.0f) + 10, visibleSize.height - (menuSize.height / 2.0f) - 40);
-    menuButton->addChild(menuLabel);
-
-    // Menu BG
+    
     auto menuBGColor = LayerColor::create(Color4B(47, 56, 59, 255), visibleSize.width, menuSize.height + 60);
     menuBGColor->setContentSize(Size(visibleSize.width, menuSize.height + 60));
-    menuBGColor->setPosition(Vec2(0, visibleSize.height - menuSize.height - 60));
+    menuBGColor->setPosition(Vec2(origin.x, visibleSize.height - menuSize.height - 60));
 
-    auto listView = ListView::create();
-    listView->setContentSize(Size(visibleSize.width, visibleSize.height - menuSize.height - 60));
-    listView->setAnchorPoint(Vec2(0.5, 0));
-    listView->setPosition(Vec2(visibleSize.width/2.0f, 0));
+    menuLabel->setAnchorPoint(Vec2(0.5, 0.5));
+    menuLabel->setPosition(menuSize.width/2.0f, menuSize.height/2.0f);
+    menuLabel->setContentSize(Size(38, 38));
+    
+    menuButton->setAnchorPoint(Vec2(0, 0.5));
+    menuButton->setPosition(10, menuBGColor->getContentSize().height/2);
+    menuButton->addChild(menuLabel);
+    
+    menuBGColor->addChild(menuButton);
 
-    listView->setTopPadding(60.0f);
-    listView->setItemsMargin(20.0f);
-    listView->setBottomPadding(60.0f);
-
-    int numberOfKits = 100;
-
-    for(int i = 0; i < numberOfKits; i++) {
-        auto menuItemModel = createMenuItem("NOME " + std::to_string(i + 1),
-                                            "NOME DA MÚSICA" + std::to_string(i + 1),
-                                            "Nome dos artistas" + std::to_string(i + 1));
-        listView->pushBackCustomItem(menuItemModel);
-    }
+    m_menuTableView = TableView::create(this, Size(visibleSize.width, visibleSize.height - menuBGColor->getContentSize().height - origin.y));
+    m_menuTableView->setDirection(ScrollView::Direction::VERTICAL);
+    m_menuTableView->setAnchorPoint(Vec2::ZERO);
+    m_menuTableView->setPosition(origin);
+    m_menuTableView->setDelegate(this);
+    m_menuTableView->setVerticalFillOrder(TableView::VerticalFillOrder::TOP_DOWN);
 
     this->addChild(layerColor);
     this->addChild(menuBGColor);
-    this->addChild(menuButton);
-    this->addChild(listView);
+    this->addChild(m_menuTableView);
+    m_menuTableView->reloadData();
+    
+    requestKits();
 
     return true;
 }
 
-cocos2d::ui::Widget* MenuScene::createMenuItem(const std::string& p_name, const std::string& p_musicName, const std::string& p_artistName) {
-    auto visibleSize = Director::getInstance()->getVisibleSize();
+void MenuScene::tableCellTouched(TableView *table, TableViewCell *cell) {
+    
+}
 
-    auto menuItem = Widget::create();
-    auto menuBG = Sprite::create("kit_menu_bg.png");
-    menuBG->setAnchorPoint(Vec2(0.5, 0.0));
-    menuBG->setPosition(Vec2(visibleSize.width/2.0f, 0.0));
-    menuBG->setContentSize(Size(visibleSize.width - 80, 229));
+Size MenuScene::tableCellSizeForIndex(TableView *table, ssize_t idx) {
+    auto width = Director::getInstance()->getWinSize().width;
+    
+    if(idx == 0) {
+        return Size(width, 260);
+    }
+    
+    return Size(width, 210);
+}
 
-    auto menuNameBG = Sprite::create("kit_menu_name_bg.png");
-    menuNameBG->setAnchorPoint(Vec2(0, 0.5));
-    menuNameBG->setPosition(20, 114.5f);
-    menuNameBG->setContentSize(Size(189, 189));
-    menuBG->addChild(menuNameBG);
+TableViewCell* MenuScene::tableCellAtIndex(TableView *table, ssize_t idx) {
+    auto string = StringUtils::format("%ld", static_cast<long>(idx));
+    TableViewCell* cell = table->dequeueCell();
+    
+    if(!cell) {
+        cell = new (std::nothrow) MenuTableViewCell();
+        cell->autorelease();
+        
+        ((MenuTableViewCell*) cell)->setup(m_kitsMap[idx]["name"], m_kitsMap[idx]["musicName"], m_kitsMap[idx]["authorName"]);
+    } else {
+        ((MenuTableViewCell*) cell)->update(m_kitsMap[idx]["name"], m_kitsMap[idx]["musicName"], m_kitsMap[idx]["authorName"]);
+    }
+    
+    return cell;
+}
 
-    auto kitLabel = Label::createWithTTF("KIT\n" + p_name, "fonts/PTSansProBlk.OTF", 40, Size::ZERO, TextHAlignment::CENTER);
-    kitLabel->setAnchorPoint(Vec2(0.5, 0.5));
-    kitLabel->setPosition(94.5, 94.5);
-    menuNameBG->addChild(kitLabel);
+ssize_t MenuScene::numberOfCellsInTableView(TableView *table) {
+    return m_kitsMap.size();
+}
 
-    auto kitArrow = Sprite::create("kit_menu_arrow.png");
-    kitArrow->setContentSize(Size(67, 67));
-    kitArrow->setAnchorPoint(Vec2(1, 0));
-    kitArrow->setPosition(menuBG->getContentSize().width, 0);
-    menuBG->addChild(kitArrow);
+// REQUEST KITS
+void MenuScene::requestKits() {
+    HttpRequest* request = new (std::nothrow) HttpRequest();
+    request->setUrl("https://api.superpads.opalastudios.com/api/fetch?version=7");
+    request->setRequestType(HttpRequest::Type::GET);
+    request->setResponseCallback(CC_CALLBACK_2(MenuScene::onHttpRequestCompleted, this));
+    request->setTag("GET test1");
+    HttpClient::getInstance()->send(request);
+    request->release();
+}
 
-    // Labels
-    auto inspiredByLabel = Label::createWithTTF("INSPIRADO EM", "fonts/PTSansProLight.OTF", 25, Size::ZERO, TextHAlignment::LEFT);
-    auto pinkLine = Sprite::create("pink_line.png");
-    auto musicNameLabel = Label::createWithTTF(p_musicName, "fonts/PTSansProBlk.OTF", 32, Size::ZERO, TextHAlignment::LEFT);
-    auto artistNameLabel = Label::createWithTTF(p_artistName, "fonts/PTSansProRegular.OTF", 27, Size::ZERO, TextHAlignment::LEFT);
+// REQUEST
 
-    pinkLine->setScale(0.8f);
-    pinkLine->setAnchorPoint(Vec2(0, 1));
-    inspiredByLabel->setAnchorPoint(Vec2(0, 0));
-    pinkLine->setPosition(0, 0);
-    inspiredByLabel->addChild(pinkLine);
-
-    inspiredByLabel->setPosition(0, musicNameLabel->getContentSize().height + 15);
-    musicNameLabel->addChild(inspiredByLabel);
-
-    artistNameLabel->setAnchorPoint(Vec2(0, 1));
-    artistNameLabel->setPosition(0, 5);
-    musicNameLabel->addChild(artistNameLabel);
-
-    musicNameLabel->setAnchorPoint(Vec2(0, 0.5));
-    musicNameLabel->setPosition(menuNameBG->getContentSize().width + 30, menuNameBG->getContentSize().height/2.0f);
-    menuNameBG->addChild(musicNameLabel);
-
-    menuItem->addChild(menuBG);
-    menuItem->setContentSize(Size(visibleSize.width, menuBG->getContentSize().height));
-
-    return menuItem;
+void MenuScene::onHttpRequestCompleted(HttpClient *sender, HttpResponse *response)
+{
+    if (!response)
+    {
+        return;
+    }
+    
+    // You can get original request type from: response->request->reqType
+    if (0 != strlen(response->getHttpRequest()->getTag()))
+    {
+        log("%s completed", response->getHttpRequest()->getTag());
+    }
+    
+    long statusCode = response->getResponseCode();
+    char statusString[64] = {};
+    sprintf(statusString, "HTTP Status Code: %ld, tag = %s", statusCode, response->getHttpRequest()->getTag());
+    log("response code: %ld", statusCode);
+    
+    if (!response->isSucceed())
+    {
+        log("response failed");
+        log("error buffer: %s", response->getErrorBuffer());
+        return;
+    }
+    
+    // dump data
+    std::vector<char> *buffer = response->getResponseData();
+    std::string dataString = std::string(buffer->begin(), buffer->end());
+    log("Http Test, dump data: ");
+    log("%s", dataString.c_str());
+    log("\n");
+    if (response->getHttpRequest()->getReferenceCount() != 2)
+    {
+        log("request ref count not 2, is %d", response->getHttpRequest()->getReferenceCount());
+    }
+    log("\n");
+    log("\n");
+    
+    Document d;
+    d.Parse(dataString.c_str());
+    
+    rapidjson::Value kits = d["kits"].GetArray();
+    
+    for(rapidjson::Value::ConstValueIterator itr = kits.Begin(); itr != kits.End(); itr++) {
+        auto obj = itr->GetObject();
+        log("Name: %s - Music: %s - Author: %s", obj["name"].GetString(), obj["musicName"].GetString(), obj["authorName"].GetString());
+        
+        std::map<std::string, std::string> objMap;
+        objMap["name"] = obj["name"].GetString();
+        objMap["musicName"] = obj["musicName"].GetString();
+        objMap["authorName"] = obj["authorName"].GetString();
+        
+        m_kitsMap.push_back(objMap);
+    }
+    
+    m_menuTableView->reloadData();
 }
