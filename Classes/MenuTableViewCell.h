@@ -19,6 +19,8 @@ private:
     cocos2d::Label* m_artistsLabel;
     
 public:
+    std::string kitName;
+    
     virtual void draw(cocos2d::Renderer *renderer, const cocos2d::Mat4 &transform, uint32_t flags) override;
     void setup(const std::string& p_name, const std::string& p_musicName, const std::string& p_artistName);
     void update(const std::string& p_name, const std::string& p_musicName, const std::string& p_artistName);

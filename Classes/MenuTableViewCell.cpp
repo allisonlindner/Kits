@@ -16,6 +16,8 @@ void MenuTableViewCell::draw(Renderer *renderer, const Mat4 &transform, uint32_t
 }
 
 void MenuTableViewCell::setup(const std::string &p_name, const std::string &p_musicName, const std::string &p_artistName) {
+    kitName = p_name;
+    
     auto menuItem = Widget::create();
     auto menuBG = Sprite::create("kit_menu_bg.png");
     menuBG->setAnchorPoint(Vec2(0.5, 0.0));

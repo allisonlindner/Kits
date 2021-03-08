@@ -4,6 +4,7 @@
 
 #include "MenuScene.h"
 #include "MenuTableViewCell.h"
+#include "KitScene.h"
 
 USING_NS_CC;
 USING_NS_CC_EXT;
@@ -62,7 +63,11 @@ bool MenuScene::init() {
 }
 
 void MenuScene::tableCellTouched(TableView *table, TableViewCell *cell) {
+    auto idx = cell->getIdx();
+    auto kitName = m_kitsMap[idx]["name"];
     
+    auto kitScene = KitScene::createScene(kitName);
+    Director::getInstance()->pushScene(kitScene);
 }
 
 Size MenuScene::tableCellSizeForIndex(TableView *table, ssize_t idx) {

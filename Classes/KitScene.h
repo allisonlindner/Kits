@@ -6,16 +6,25 @@
 #define PROJ_ANDROID_KITSCENE_H
 
 #include "cocos2d.h"
+#include "rapidjson/document.h"
+#include "network/CCDownloader.h"
+#include <algorithm>
+#include <fstream>
+#include <stdio.h>
 
 class KitScene : public cocos2d::Scene {
 private:
-    void setupPads();
+    void setupLayout();
+    void unzipFiles();
+    std::string m_kitName;
+    
 public:
-    static cocos2d::Scene* createScene();
-
+    static cocos2d::Scene* createScene(std::string p_kitName);
     virtual bool init();
-
     CREATE_FUNC(KitScene);
+    void setupPads();
+    
+    void menuCallback(cocos2d::Ref* sender);
 };
 
 
