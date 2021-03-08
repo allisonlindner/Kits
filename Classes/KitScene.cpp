@@ -6,6 +6,8 @@
 #include "PadTile.h"
 
 USING_NS_CC;
+
+using namespace cocos2d::ui;
 using namespace rapidjson;
 
 cocos2d::Scene *KitScene::createScene(std::string p_kitName) {
@@ -32,17 +34,15 @@ void KitScene::setupLayout() {
     layerColor->setPosition(origin);
 
     // Open Menu Button
-    auto xSprite = Sprite::create("x_bg.png");
-    auto menu = MenuItemSprite::create(xSprite, xSprite, xSprite,
-                                       CC_CALLBACK_1(KitScene::menuCallback, this));
+    auto menu = Button::create("x_bg.png", "x_bg.png", "x_bg.png");
     auto menuLabel = MenuItemLabel::create(Label::createWithTTF("MENU", "fonts/PTSansProBlk.OTF", 40));
     auto menuSize = menu->getContentSize();
     menuLabel->setAnchorPoint(Vec2(0.5, 0.5));
     menuLabel->setPosition(menuSize.width/2.0f, (menuSize.height/2.0f) + 5);
     menu->addChild(menuLabel);
     menu->setAnchorPoint(Vec2(0, 0.5));
-    menu->setPosition(origin.x + 10, visibleSize.height - (menuSize.height/2.0f) - 40);
-    menu->setContentSize(xSprite->getContentSize());
+    menu->setPosition(Vec2(origin.x + 10, visibleSize.height - (menuSize.height/2.0f) - 40));
+    menu->addTouchEventListener(CC_CALLBACK_2(KitScene::menuCallback, this));
 
     // Header Line
     auto line = DrawNode::create(2.0f);
@@ -115,9 +115,18 @@ void KitScene::setupLayout() {
     }
 }
 
-void KitScene::menuCallback(Ref *sender) {
+void KitScene::menuCallback(Ref *sender, Widget::TouchEventType type) {
     log("PRESSED MENU");
-    Director::getInstance()->popScene();
+    switch (type)
+    {
+        case Widget::TouchEventType::BEGAN:
+            Director::getInstance()->popScene();
+            break;
+        case Widget::TouchEventType::ENDED:
+            break;
+        default:
+            break;
+    }
 }
 
 void KitScene::unzipFiles() {
@@ -176,17 +185,7 @@ void KitScene::setupPads() {
     char path[256];
     sprintf(path, "%sKits/%s/dataSounds/%s.txt", FileUtils::getInstance()->getWritablePath().c_str(), m_kitName.c_str(), m_kitName.c_str());
     
-    std::ifstream jsonStream;
-    jsonStream.open (path);
-    
-    std::string jsonContent = "";
-    std::string getLineContent;
-    
-    while(std::getline(jsonStream, getLineContent)) {
-        jsonContent += getLineContent;
-    }
-    
-    jsonStream.close();
+    std::string jsonContent = FileUtils::getInstance()->getStringFromFile(path);
     
     log("%s", jsonContent.c_str());
     

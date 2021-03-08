@@ -8,6 +8,7 @@
 #include "cocos2d.h"
 #include "rapidjson/document.h"
 #include "network/CCDownloader.h"
+#include "ui/CocosGUI.h"
 #include <algorithm>
 #include <fstream>
 #include <stdio.h>
@@ -24,7 +25,7 @@ public:
     CREATE_FUNC(KitScene);
     void setupPads();
     
-    void menuCallback(cocos2d::Ref* sender);
+    void menuCallback(cocos2d::Ref* sender, cocos2d::ui::Widget::TouchEventType type);
 };
 
 
